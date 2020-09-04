@@ -9,7 +9,7 @@
 #include "ev3api.h"
 #include "app.h"
 
-#define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 #define _debug(x) (x)
@@ -100,8 +100,7 @@ static void check_touch_sensor(int id)
 {
     int inx = (id == touch_sensor0) ? 0 : 1;
     is_pressed[inx] = ev3_touch_sensor_is_pressed(id);
-    //_debug(syslog(LOG_NOTICE, "is_pressed[%d]=%d", inx, is_pressed[inx]));
-    syslog(LOG_NOTICE, "is_pressed[%d]=%d", inx, is_pressed[inx]);
+    _debug(syslog(LOG_NOTICE, "is_pressed[%d]=%d", inx, is_pressed[inx]));
     return;
 }
 
@@ -255,25 +254,55 @@ static void do_practice_2_Fifh(void)
     }
     return;
 }
+#define BLINK_CYCLE 20
+#define BLINK_CYCLE_HALF ( BLINK_CYCLE / 2 )
+
+static void blink_led(ledcolor_t b_color)
+{
+    static int count = 0;
+    check_touch_sensor(touch_sensor1);
+    if (is_pressed[1] == true) {
+        ev3_led_set_color(b_color);
+        return;
+    }
+
+    if (count <= BLINK_CYCLE_HALF) {
+        ev3_led_set_color(b_color);
+    }
+    else if (count > BLINK_CYCLE_HALF) {
+        ev3_led_set_color(LED_OFF);
+    }
+    count++;
+    if (count >= BLINK_CYCLE) {
+        count = 0;
+    }
+    return;
+}
 static void do_practice_2(void)
 {
     switch (Practice2_Phase) {
     case Practice2_Phase_First:
+        blink_led(LED_GREEN);
         do_practice_2_first();
         break;
     case Practice2_Phase_Second:
+        blink_led(LED_ORANGE);
         do_practice_2_second();
         break;
     case Practice2_Phase_Third:
+        blink_led(LED_RED);
         do_practice_2_third();
         break;
     case Practice2_Phase_Fourth:
+        blink_led(LED_RED);
         do_practice_2_Fourth();
         break;
     case Practice2_Phase_Fifth:
+        blink_led(LED_GREEN);
         do_practice_2_Fifh();
         break;
     default:
+        ev3_led_set_color(LED_OFF);
         do_stop();
         break;
     }
@@ -281,7 +310,6 @@ static void do_practice_2(void)
 }
 
 void main_task(intptr_t unused) {
-    int mode = 0;
     ev3_sensor_config(color_sensor, COLOR_SENSOR);
     ev3_sensor_config(ultrasonic_sensor, ULTRASONIC_SENSOR);
     ev3_sensor_config(touch_sensor0, TOUCH_SENSOR);
@@ -292,24 +320,8 @@ void main_task(intptr_t unused) {
   
     syslog(LOG_NOTICE, "#### motor control start");
     while(1) {
-        if (mode == 0) {
-            check_touch_sensor(touch_sensor0);
-            if (is_pressed[0]) {
-                mode = 1;
-            }
-            else {
-                do_stop();
-            }
-        }
-        else {
-            check_touch_sensor(touch_sensor0);
-            if (is_pressed[0]) {
-                mode = 0;
-            }
-            else {
-                do_practice_2();
-            }
-        }
+        do_arm_move(false);
+        do_practice_2();
         tslp_tsk(100000); /* 100msec */
     }
 }
