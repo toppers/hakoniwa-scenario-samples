@@ -38,7 +38,7 @@ do {    \
  */
 static void do_foward(int power)
 {
-    ER err = ev3_motor_steer(left_motor, right_motor, power, -20);
+    ER err = ev3_motor_steer(left_motor, right_motor, power, 0);
     ERR_CHECK(err);
     return;
 }
@@ -319,9 +319,40 @@ void main_task(intptr_t unused) {
     ev3_motor_config(arm_motor, LARGE_MOTOR);
   
     syslog(LOG_NOTICE, "#### motor control start");
+    int count = 0;
+    ev3_motor_stop(left_motor, true);
+    ev3_motor_stop(right_motor, true);
     while(1) {
-        do_arm_move(false);
-        do_practice_2();
+#if 0
+        /*
+         * ここに制御プログラムを入れてください
+         */
+        if (count <= 100) {
+           ev3_motor_set_power(left_motor, 3);
+           ev3_motor_set_power(right_motor, 3);
+        }
+        else if ((count > 100) && (count <= 200)) {
+           ev3_motor_set_power(left_motor, -3);
+           ev3_motor_set_power(right_motor, -3);
+        }
+        else if ((count > 200) && (count <= 300)) {
+           ev3_motor_set_power(left_motor, 0);
+           ev3_motor_set_power(right_motor, 0);
+           ev3_motor_set_power(arm_motor, 1);
+        }
+        else if ((count > 300) && (count <= 400)) {
+           ev3_motor_set_power(left_motor, 0);
+           ev3_motor_set_power(right_motor, 0);
+           ev3_motor_set_power(arm_motor, -1);
+        }
+        else {
+            /* nothing to do */
+        }
+        count++;
+#else
+    do_arm_move(false);
+    do_practice_2();
+#endif
         tslp_tsk(100000); /* 100msec */
     }
 }
