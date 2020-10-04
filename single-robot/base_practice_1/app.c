@@ -196,7 +196,7 @@ static void do_practice_2_second(void)
 {
     check_ultrasonic_sensor();
     check_color_sensor();
-    if (ultrasonic_value > 50) {
+    if (ultrasonic_value > 5) {
         do_foward(5);
         return;
     }
@@ -214,7 +214,7 @@ static void do_practice_2_second(void)
 static void do_practice_2_third(void)
 {
     check_ultrasonic_sensor();
-    if (ultrasonic_value < 120) {
+    if (ultrasonic_value < 12) {
         do_turn(5);
         return;
     }
@@ -244,7 +244,7 @@ static void do_practice_2_Fourth(void)
 static void do_practice_2_Fifh(void)
 {
     check_ultrasonic_sensor();
-    if (ultrasonic_value < 50) {
+    if (ultrasonic_value < 5) {
         do_stop();
         syslog(LOG_NOTICE, "GOAL!!");
         Practice2_Phase = Practice2_Phase_Sixth;
@@ -350,6 +350,7 @@ void main_task(intptr_t unused) {
         }
         count++;
 #else
+    //check_ultrasonic_sensor();
     do_arm_move(false);
     do_practice_2();
 #endif
